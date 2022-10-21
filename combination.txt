@@ -1,69 +1,54 @@
-lw		0 	1 n
-lw		0 	2 r
-lw		0 	3 subAdr	prepare to call sub4n. $2=sub4n
-jalr	2	4			call sub4n; $4=return address; $3=answer
-halt
-
-Combination   lw		0	5 pos1		$5 = 1
-sw		7	1 stack
-add     7   5 7
-sw		7	2 stack
-add     7   5 7
-sw		7	3 stack
-add     7   5 7
-sw		7	4 stack
-add     7   5 7
-sw		7	6 stack
-add     7   5 7
-
-sw 0 5 zero
-beq 2 5 then_r_eq_zero_or_n_eq_r if r==0
-beq 1 2 then_r_eq_zero_or_n_eq_r if r==n
-beq 1 1 else_r_eq_zero_or_n_eq_r
-
-then_r_eq_zero_or_n_eq_r   sw      0   2 pos1       $2 = 1
-    lw		0	5 neg1       $5 = -1
-    add		7	5 7          decrement stack pointer
-    lw		7	6 stack      recover original $6
-    add		7	5 7          decrement stack pointer
-    lw		7	4 stack      recover original $4
-    add		7	5 7          decrement stack pointer
-    lw		7	3 2          $3 = $2 = 1
-    add		7	5 7          decrement stack pointer
-    lw		7	2 stack      recover original $2
-    add		7	5 7          decrement stack pointer
-    lw		7	1 stack      recover original $1
-    jalr	4	2            return.  $2 is not restored.
-
-else_r_eq_zero_or_n_eq_r   lw      0   5 neg1       $5 = -1
-    add     1   1 5          n = n-1
-    lw		0 	3 subAdr	 prepare to call sub4n. $2=sub4n
-    jalr	2	4			 call combination(n-1,r)
-    lw      0   5 zero       $5 = 0
-    add     6   3 5          save $3 into 6$
-    
-    lw      0   5 neg1       $5 = -1
-    add     2   2 5          r = r-1
-    lw		0 	3 subAdr	 prepare to call sub4n. $2=sub4n
-    jalr	2	4			 call combination(n-1,r-1)
-    add     3   3 6          combination(n-1,r) + combination(n-1, r-1)
-    
-lw		0	5 neg1       $5 = -1
-add		7	5 7          decrement stack pointer
-lw		7	6 stack      recover original $6
-add		7	5 7          decrement stack pointer
-lw		7	4 stack      recover original $4
-add		7	5 7          decrement stack pointer
-lw		7	3 stack      recover original $3
-add		7	5 7          decrement stack pointer
-lw		7	2 stack      recover original $2
-add		7	5 7          decrement stack pointer
-lw		7	1 stack      recover original $1
-jalr	4	2            return.  $2 is not restored.
-
-pos1	.fill	1
-neg1	.fill	-1
-subAdr	.fill	Combination
-n	    .fill	5
-r	    .fill	4
-stack	.fill	0 
+  lw  0   1   n
+        lw  0   2   r
+        lw  0   5   stack
+        lw  0   7   endAddr
+		
+combination beq 1   2   if_r_eq_0_or_n_eq_r	case n==r
+        beq 2   0   if_r_eq_0_or_n_eq_r	if case==0 
+        lw  0   6   neg1	$0 = -1
+        add 1   6   1		n = n-1
+        lw  0   6   pos1	$0 = 1
+        sw  5   7   stack	store $7 into stack
+        add 5   6   5		increment stack
+        sw  5   1   stack	store $1 into stack
+        add 5   6   5		increment stack
+        sw  5   2   stack	store $2 into stack
+        add 5   6   5		increment stack
+        lw  0   6   comAddr set function call combination
+        jalr 6  7			call combinationnation(n-1,r)
+        add 3   0   4		$3 = $4, save value
+        lw  0   6   pos1	$6 = 1
+        sw  5   4   stack	store $4 into stack
+        lw  0   6   neg1	$6 = -1
+        add 5   6   5		decrement stack
+        lw  5   2   stack	restore $2 from stack
+        add 5   6   5		decrement stack
+        lw  5   1   stack	restore $1 from stack
+        add 2   6   2		r = r-1
+        lw  0   6   pos1	$6 = 1
+        add 5   6   5		increment stack
+        add 5   6   5		increment stack
+        add 5   6   5 		increment stack
+        lw  0   6   comAddr		set function call combination
+        jalr 6  7			call combination(n-1,r-1)
+        lw  0   6   neg1	$6 = -1
+        add 5   6   5		decrement stack
+        lw  5   4   stack	restore $4 from stack
+        add 3   4   3		$3 = $3 + $4
+        add 5   6   5		decrement stack
+        add 5   6   5		decrement stack
+        add 5   6   5		decrement stack
+        lw  5   7   stack	restore $7 from stack
+        jalr 7  6			return $3
+end halt
+if_r_eq_0_or_n_eq_r  lw  0   6   pos1	if (r==0 || n==r) $6 = 1
+        add 0   6   3
+        jalr    7   6		return 1
+		
+n       .fill   7
+r       .fill   3
+pos1    .fill    1
+neg1    .fill   -1
+comAddr .fill   combination
+endAddr .fill   end
+stack   .fill   0
